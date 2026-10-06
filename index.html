@@ -36,6 +36,7 @@
 			background-color: var(--paper);
 			background-image: radial-gradient(#8ea89916 0.8px, transparent 0.8px);
 			background-size: 18px 18px;
+				overscroll-behavior-x: none;
 		}
 		button { color: inherit; font: inherit; }
 		button:focus-visible { outline: 3px solid color-mix(in srgb, var(--accent) 60%, white); outline-offset: 3px; }
@@ -68,8 +69,8 @@
 		.stat-value { display: block; margin-top: 2px; font: 800 20px Nunito, sans-serif; letter-spacing: 0; }
 		.stat-value small { color: var(--muted); font: 600 11px "Mali", sans-serif; }
 		.board-wrap { width: min(100%, 500px); margin: 0 auto; }
-		.board { display: grid; grid-template-columns: repeat(var(--size), minmax(0, 1fr)); gap: clamp(5px, 1.25vw, 10px); padding: clamp(8px, 2vw, 13px); border: 5px solid color-mix(in srgb, var(--tray) 78%, white); border-radius: 18px; background: var(--tray); box-shadow: inset 0 2px 9px #0003, 0 5px 0 color-mix(in srgb, var(--tray) 80%, black); aspect-ratio: 1; touch-action: none; }
-		.tile { display: grid; min-width: 0; place-items: center; border: 2px solid color-mix(in srgb, var(--tile-ink) 13%, white); border-radius: clamp(7px, 1.4vw, 13px); background: var(--tile); color: var(--tile-ink); box-shadow: inset 0 2px 0 #ffffffd9, 0 3px 0 color-mix(in srgb, var(--tile-ink) 22%, #333); font: 900 clamp(18px, 5vw, 38px) Nunito, "Mali", sans-serif; letter-spacing: 0; cursor: grab; user-select: none; touch-action: none; transition: transform .13s ease, background .2s, box-shadow .13s; }
+		.board { display: grid; grid-template-columns: repeat(var(--size), minmax(0, 1fr)); gap: clamp(5px, 1.25vw, 10px); padding: clamp(8px, 2vw, 13px); border: 5px solid color-mix(in srgb, var(--tray) 78%, white); border-radius: 18px; background: var(--tray); box-shadow: inset 0 2px 9px #0003, 0 5px 0 color-mix(in srgb, var(--tray) 80%, black); aspect-ratio: 1; touch-action: none; overscroll-behavior: none; }
+		.tile { display: grid; min-width: 0; place-items: center; border: 2px solid color-mix(in srgb, var(--tile-ink) 13%, white); border-radius: clamp(7px, 1.4vw, 13px); background: var(--tile); color: var(--tile-ink); box-shadow: inset 0 2px 0 #ffffffd9, 0 3px 0 color-mix(in srgb, var(--tile-ink) 22%, #333); font: 900 clamp(18px, 5vw, 38px) Nunito, "Mali", sans-serif; letter-spacing: 0; cursor: grab; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; -webkit-user-drag: none; touch-action: none; transition: transform .13s ease, background .2s, box-shadow .13s; }
 		.tile:nth-child(4n + 2) { background: var(--tile); color: var(--tile-ink); }
 		.tile:not(:disabled):hover { transform: translateY(-2px); box-shadow: inset 0 2px 0 #ffffffd9, 0 5px 0 color-mix(in srgb, var(--tile-ink) 22%, #333); }
 		.tile:not(:disabled):active { cursor: grabbing; }
@@ -77,7 +78,8 @@
 		.tile.empty { border-color: transparent; background: color-mix(in srgb, var(--tray) 85%, black); box-shadow: inset 0 3px 9px #0005; }
 		.tile.dragging { z-index: 3; transform: translate(var(--drag-x), var(--drag-y)) scale(1.06); cursor: grabbing; box-shadow: inset 0 2px 0 #ffffffd9, 0 9px 18px #0005; transition: none; }
 		.tile.dragging { border-color: white; background: var(--accent); color: white; box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 36%, transparent), 0 9px 18px #0005; }
-		.tile-number { position: relative; z-index: 1; }
+		.tile-number { position: relative; z-index: 1; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; -webkit-user-drag: none; }
+		html.is-dragging, html.is-dragging body { touch-action: none; overscroll-behavior: none; user-select: none; -webkit-user-select: none; }
 		.tile.slide-covered .tile-number { visibility: hidden; }
 		.tile-ghost { position: fixed; z-index: 1000; margin: 0; opacity: 1; pointer-events: none; transition: none; animation: none !important; --drag-x: 0px; --drag-y: 0px; transform: translate(var(--drag-x), var(--drag-y)); }
 		.tile-ghost.dragging { z-index: 1001; }
@@ -128,14 +130,14 @@
 			.layout { grid-template-columns: 1fr; gap: 17px; }
 			.intro { text-align: center; }
 			.intro-heading { justify-content: center; }
-			.sidebar { grid-template-columns: 1fr 1fr; padding: 0; gap: 10px; }
+			.sidebar { grid-template-columns: 1fr; padding: 0; gap: 10px; }
 			.side-section { padding: 14px; }
-			.side-section:last-child { display: none; }
 			.footer { margin-top: 16px; }
 		}
-		@media (max-width: 390px) {
-			.page { width: calc(100% - 20px); }
-			.game-panel { padding: 12px; border-radius: 18px; }
+		@media (max-width: 430px) {
+			.page { width: calc(100% - 12px); }
+			.game-panel { padding: 8px; border-radius: 18px; }
+			.board { gap: 5px; padding: 7px; }
 			.difficulty { padding-inline: 9px; }
 			.difficulty-row { gap: 6px; }
 			.section-label { font-size: 10px; }
@@ -241,6 +243,7 @@
 			let soundOn = true;
 			let audioContext = null;
 			let pointerDrag = null;
+			let pointerScrollY = 0;
 
 			function formatTime(totalSeconds) {
 				return `${String(Math.floor(totalSeconds / 60)).padStart(2, "0")}:${String(totalSeconds % 60).padStart(2, "0")}`;
@@ -318,6 +321,8 @@
 				tile.addEventListener("pointerdown", event => {
 					if (tile.disabled || event.button !== 0) return;
 					event.preventDefault();
+						pointerScrollY = window.scrollY;
+						document.documentElement.classList.add("is-dragging");
 					const index = Number(tile.dataset.index);
 					const path = lineToEmpty(index, tiles.indexOf(0));
 					const preview = createDragPreview(path);
@@ -416,6 +421,11 @@
 				drag.tile.style.removeProperty("--drag-y");
 			}
 
+			function releaseDragScrollLock() {
+				document.documentElement.classList.remove("is-dragging");
+				if (window.scrollY !== pointerScrollY) window.scrollTo(0, pointerScrollY);
+			}
+
 			function moveTile(index) {
 				const emptyIndex = tiles.indexOf(0);
 				const path = lineToEmpty(index, emptyIndex);
@@ -457,6 +467,7 @@
 			function startGame() {
 				if (pointerDrag) clearDragPreview(pointerDrag);
 				pointerDrag = null;
+				document.documentElement.classList.remove("is-dragging");
 				window.clearInterval(timerId);
 				started = false;
 				finished = false;
@@ -563,12 +574,14 @@
 				const emptyBounds = emptyTile.getBoundingClientRect();
 				const droppedOnEmpty = event.clientX >= emptyBounds.left && event.clientX <= emptyBounds.right && event.clientY >= emptyBounds.top && event.clientY <= emptyBounds.bottom;
 				clearDragPreview(drag);
+				releaseDragScrollLock();
 				if (drag.moved && droppedOnEmpty) moveTile(drag.index);
 			});
 			document.addEventListener("pointercancel", event => {
 				if (!pointerDrag || pointerDrag.pointerId !== event.pointerId) return;
 				clearDragPreview(pointerDrag);
 				pointerDrag = null;
+				releaseDragScrollLock();
 			});
 			document.getElementById("sound-toggle").addEventListener("click", event => {
 				soundOn = !soundOn;
