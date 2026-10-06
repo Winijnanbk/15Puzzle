@@ -1,0 +1,596 @@
+<!doctype html>
+<html lang="th">
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<meta name="theme-color" content="#f6f5ef">
+	<title>เกมเลื่อนตัวเลข | Little Slide</title>
+	<link rel="preconnect" href="https://fonts.googleapis.com">
+	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+	<link href="https://fonts.googleapis.com/css2?family=Mali:wght@400;500;600;700&family=Nunito:wght@500;600;700;800;900&display=swap" rel="stylesheet">
+	<style>
+		:root {
+			color-scheme: light;
+			--ink: #303b39;
+			--muted: #82908a;
+			--paper: #f6f5ef;
+			--surface: #fffefa;
+			--accent: #79a996;
+			--accent-deep: #537e70;
+			--tile: #dcece3;
+			--tile-ink: #3b6758;
+			--tile-alt: #f5dfbd;
+			--tile-alt-ink: #8b623b;
+			--tray: #46534b;
+			--line: #e8e7df;
+			--shadow: 0 20px 55px #53675b12;
+			font-family: "Mali", "Noto Sans Thai", sans-serif;
+			font-synthesis: none;
+		}
+		* { box-sizing: border-box; }
+		body {
+			min-width: 320px;
+			min-height: 100vh;
+			margin: 0;
+			color: var(--ink);
+			background-color: var(--paper);
+			background-image: radial-gradient(#8ea89916 0.8px, transparent 0.8px);
+			background-size: 18px 18px;
+		}
+		button { color: inherit; font: inherit; }
+		button:focus-visible { outline: 3px solid color-mix(in srgb, var(--accent) 60%, white); outline-offset: 3px; }
+		.page { width: min(100% - 36px, 1020px); margin: 0 auto; padding: 26px 0 34px; }
+		.topbar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 32px; }
+		.brand { display: flex; align-items: center; gap: 11px; font: 900 18px Nunito, sans-serif; letter-spacing: 0; }
+		.brand-mark { display: grid; width: 38px; aspect-ratio: 1; place-items: center; border-radius: 13px; background: var(--accent); color: white; font-size: 20px; transform: rotate(-5deg); }
+		.brand small { display: block; color: var(--muted); font: 600 11px "Mali", sans-serif; }
+		.icon-button { display: grid; width: 42px; aspect-ratio: 1; place-items: center; border: 1px solid var(--line); border-radius: 14px; background: var(--surface); cursor: pointer; transition: transform .18s, background .18s; }
+		.icon-button:hover { transform: translateY(-2px); background: white; }
+		.icon-button svg { width: 19px; height: 19px; }
+		.layout { display: grid; grid-template-columns: minmax(0, 1fr) 290px; align-items: start; gap: 28px; }
+		.game-column { min-width: 0; }
+		.intro { margin: 0 0 16px; }
+		.intro-heading { display: flex; align-items: center; justify-content: flex-start; gap: 9px; }
+		.goal-toggle { flex: 0 0 40px; width: 40px; }
+		.goal-toggle svg { width: 20px; height: 20px; }
+		.eyebrow { margin: 0 0 3px; color: var(--accent-deep); font-size: 11px; font-weight: 700; }
+		h1 { margin: 0; font-size: clamp(24px, 4vw, 32px); font-weight: 700; line-height: 1.35; }
+		.game-panel { padding: clamp(14px, 3vw, 25px); border: 1px solid #e8e7dfcc; border-radius: 22px; background: color-mix(in srgb, var(--surface) 94%, transparent); box-shadow: var(--shadow); }
+		.difficulty-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 17px; }
+		.section-label { color: var(--muted); font-size: 12px; font-weight: 600; white-space: nowrap; }
+		.segmented { display: flex; padding: 4px; border: 1px solid var(--line); border-radius: 13px; background: #f7f7f2; }
+		.difficulty { padding: 7px 12px; border: 0; border-radius: 9px; background: transparent; color: var(--muted); font: 800 12px Nunito, "Mali", sans-serif; letter-spacing: 0; cursor: pointer; transition: .2s; }
+		.difficulty[aria-pressed="true"] { background: var(--surface); color: var(--accent-deep); box-shadow: 0 2px 7px #394b3d12; }
+		.stats-strip { display: grid; grid-template-columns: repeat(3, 1fr); margin: 0 0 16px; padding: 12px 4px; border-block: 1px solid var(--line); }
+		.stat { text-align: center; }
+		.stat + .stat { border-left: 1px solid var(--line); }
+		.stat-label { display: block; color: var(--muted); font-size: 10px; }
+		.stat-value { display: block; margin-top: 2px; font: 800 20px Nunito, sans-serif; letter-spacing: 0; }
+		.stat-value small { color: var(--muted); font: 600 11px "Mali", sans-serif; }
+		.board-wrap { width: min(100%, 500px); margin: 0 auto; }
+		.board { display: grid; grid-template-columns: repeat(var(--size), minmax(0, 1fr)); gap: clamp(5px, 1.25vw, 10px); padding: clamp(8px, 2vw, 13px); border: 5px solid color-mix(in srgb, var(--tray) 78%, white); border-radius: 18px; background: var(--tray); box-shadow: inset 0 2px 9px #0003, 0 5px 0 color-mix(in srgb, var(--tray) 80%, black); aspect-ratio: 1; touch-action: none; }
+		.tile { display: grid; min-width: 0; place-items: center; border: 2px solid color-mix(in srgb, var(--tile-ink) 13%, white); border-radius: clamp(7px, 1.4vw, 13px); background: var(--tile); color: var(--tile-ink); box-shadow: inset 0 2px 0 #ffffffd9, 0 3px 0 color-mix(in srgb, var(--tile-ink) 22%, #333); font: 900 clamp(18px, 5vw, 38px) Nunito, "Mali", sans-serif; letter-spacing: 0; cursor: grab; user-select: none; touch-action: none; transition: transform .13s ease, background .2s, box-shadow .13s; }
+		.tile:nth-child(4n + 2) { background: var(--tile); color: var(--tile-ink); }
+		.tile:not(:disabled):hover { transform: translateY(-2px); box-shadow: inset 0 2px 0 #ffffffd9, 0 5px 0 color-mix(in srgb, var(--tile-ink) 22%, #333); }
+		.tile:not(:disabled):active { cursor: grabbing; }
+		.tile:disabled { cursor: default; }
+		.tile.empty { border-color: transparent; background: color-mix(in srgb, var(--tray) 85%, black); box-shadow: inset 0 3px 9px #0005; }
+		.tile.dragging { z-index: 3; transform: translate(var(--drag-x), var(--drag-y)) scale(1.06); cursor: grabbing; box-shadow: inset 0 2px 0 #ffffffd9, 0 9px 18px #0005; transition: none; }
+		.tile.dragging { border-color: white; background: var(--accent); color: white; box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 36%, transparent), 0 9px 18px #0005; }
+		.tile-number { position: relative; z-index: 1; }
+		.tile.slide-covered .tile-number { visibility: hidden; }
+		.tile-ghost { position: fixed; z-index: 1000; margin: 0; opacity: 1; pointer-events: none; transition: none; animation: none !important; --drag-x: 0px; --drag-y: 0px; transform: translate(var(--drag-x), var(--drag-y)); }
+		.tile-ghost.dragging { z-index: 1001; }
+		.tile-group-member { border-color: color-mix(in srgb, var(--accent) 24%, white); }
+		.board.is-solved .tile { animation: solved-pop .42s both; animation-delay: calc(var(--i) * 18ms); }
+		.controls { display: flex; justify-content: center; flex-wrap: wrap; gap: 9px; margin-top: 17px; }
+		.action { display: inline-flex; min-height: 42px; align-items: center; justify-content: center; gap: 7px; padding: 9px 15px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); font-size: 12px; font-weight: 600; cursor: pointer; transition: transform .18s, border-color .18s; }
+		.action:hover { transform: translateY(-2px); border-color: color-mix(in srgb, var(--accent) 45%, var(--line)); }
+		.action.primary { border-color: var(--accent); background: var(--accent); color: white; }
+		.action svg { width: 16px; height: 16px; }
+		.key-hint { margin: 12px 0 0; color: var(--muted); font-size: 11px; text-align: center; }
+		.goal-guide { display: flex; align-items: center; justify-content: center; gap: 13px; margin: 14px auto 0; padding: 11px 13px; border: 1px solid var(--line); border-radius: 12px; background: #f7f7f2; }
+		.goal-guide[hidden] { display: none; }
+		.goal-copy { color: var(--muted); font-size: 10px; line-height: 1.7; }
+		.goal-copy strong { display: block; margin-bottom: 2px; color: var(--ink); font-size: 11px; }
+		.goal-board { display: grid; width: min(44%, 176px); grid-template-columns: repeat(var(--size), minmax(0, 1fr)); gap: 3px; padding: 4px; border-radius: 8px; background: var(--tray); }
+		.goal-cell { display: grid; min-width: 0; aspect-ratio: 1; place-items: center; border-radius: 3px; background: var(--tile); color: var(--tile-ink); font: 800 9px Nunito, sans-serif; }
+		.goal-cell.empty { background: color-mix(in srgb, var(--tray) 80%, black); }
+		.sidebar { display: grid; gap: 15px; padding-top: 4px; }
+		.side-section { padding: 18px; border: 1px solid var(--line); border-radius: 17px; background: #fffefaed; }
+		.side-heading { display: flex; align-items: center; justify-content: space-between; margin: 0 0 13px; font-size: 14px; font-weight: 700; }
+		.side-heading span { color: var(--muted); font-size: 10px; font-weight: 500; }
+		.record-list { display: grid; gap: 10px; }
+		.record { display: flex; align-items: center; justify-content: space-between; gap: 12px; font-size: 11px; }
+		.record-name { color: var(--muted); }
+		.record-value { font: 800 13px Nunito, sans-serif; }
+		.empty-records { padding: 8px 0; color: var(--muted); font-size: 11px; line-height: 1.8; }
+		.tip { display: flex; align-items: flex-start; gap: 10px; color: var(--muted); font-size: 11px; line-height: 1.8; }
+		.tip-icon { display: grid; flex: 0 0 29px; width: 29px; aspect-ratio: 1; place-items: center; border-radius: 10px; background: color-mix(in srgb, var(--tile) 75%, white); color: var(--accent-deep); }
+		.tip-icon svg { width: 16px; }
+		.footer { margin-top: 25px; color: #929a91; font-size: 10px; text-align: center; }
+		dialog { width: min(390px, calc(100% - 32px)); padding: 0; overflow: visible; border: 1px solid #ffffffaa; border-radius: 23px; background: var(--surface); color: var(--ink); box-shadow: 0 24px 90px #35493a38; }
+		dialog::backdrop { background: #283b3280; backdrop-filter: blur(4px); }
+		dialog[open] { animation: modal-in .32s cubic-bezier(.2,.8,.2,1) both; }
+		.modal-content { padding: 30px 25px 24px; text-align: center; }
+		.modal-emoji { display: grid; width: 68px; aspect-ratio: 1; place-items: center; margin: 0 auto 12px; border-radius: 23px; background: var(--tile); font-size: 34px; transform: rotate(-5deg); }
+		.modal-content h2 { margin: 0; font-size: 23px; }
+		.modal-content p { margin: 8px 0 20px; color: var(--muted); font-size: 12px; line-height: 1.8; }
+		.modal-stats { display: flex; justify-content: center; gap: 24px; margin: 0 0 20px; }
+		.modal-stats strong { display: block; font: 900 19px Nunito, sans-serif; }
+		.modal-stats span { color: var(--muted); font-size: 10px; }
+		.modal-actions { display: flex; justify-content: center; gap: 9px; }
+		@keyframes solved-pop { 45% { transform: scale(1.08) rotate(-3deg); } }
+		@keyframes modal-in { from { opacity: 0; transform: translateY(12px) scale(.96); } to { opacity: 1; transform: translateY(0) scale(1); } }
+		@media (max-width: 760px) {
+			.page { width: min(100% - 26px, 540px); padding-top: 17px; }
+			.topbar { margin-bottom: 22px; }
+			.layout { grid-template-columns: 1fr; gap: 17px; }
+			.intro { text-align: center; }
+			.intro-heading { justify-content: center; }
+			.sidebar { grid-template-columns: 1fr 1fr; padding: 0; gap: 10px; }
+			.side-section { padding: 14px; }
+			.side-section:last-child { display: none; }
+			.footer { margin-top: 16px; }
+		}
+		@media (max-width: 390px) {
+			.page { width: calc(100% - 20px); }
+			.game-panel { padding: 12px; border-radius: 18px; }
+			.difficulty { padding-inline: 9px; }
+			.difficulty-row { gap: 6px; }
+			.section-label { font-size: 10px; }
+			.action { padding-inline: 11px; }
+			.sidebar { grid-template-columns: 1fr; }
+		}
+		@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; scroll-behavior: auto !important; } }
+	</style>
+</head>
+<body>
+	<main class="page">
+		<header class="topbar">
+			<div class="brand"><span class="brand-mark" aria-hidden="true">15</span><span>little slide<small>เกมเลื่อนตัวเลข</small></span></div>
+			<button class="icon-button" id="sound-toggle" type="button" aria-label="ปิดเสียง" title="ปิดเสียง">
+				<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 5 6 9H3v6h3l5 4z"/><path d="M15.5 8.5a5 5 0 0 1 0 7M19 5a10 10 0 0 1 0 14"/></svg>
+			</button>
+		</header>
+		<div class="layout">
+			<section class="game-column" aria-label="เกมเลื่อนตัวเลข">
+				<div class="intro">
+					<p class="eyebrow">เกมเลื่อนตัวเลข</p>
+					<div class="intro-heading">
+						<h1>เรียงลำดับให้ถูกต้อง</h1>
+						<button class="icon-button goal-toggle" id="goal-toggle" type="button" aria-label="ดูเป้าหมาย" aria-controls="goal-guide" aria-expanded="false" title="ดูเป้าหมาย">
+							<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18h6M10 22h4M8 14.5a7 7 0 1 1 8 0c-.8.6-1 1.2-1 2.5h-6c0-1.3-.2-1.9-1-2.5Z"/><path d="M12 3v2"/></svg>
+						</button>
+					</div>
+				</div>
+				<div class="game-panel">
+					<div class="difficulty-row">
+						<span class="section-label">ขนาด</span>
+						<div class="segmented" role="group" aria-label="เลือกระดับความยาก">
+							<button class="difficulty" type="button" data-size="3" aria-pressed="false">3×3</button>
+							<button class="difficulty" type="button" data-size="4" aria-pressed="true">4×4</button>
+							<button class="difficulty" type="button" data-size="5" aria-pressed="false">5×5</button>
+						</div>
+					</div>
+					<div class="stats-strip" aria-live="polite">
+						<div class="stat"><span class="stat-label">เวลา</span><span class="stat-value" id="timer">00:00</span></div>
+						<div class="stat"><span class="stat-label">จำนวนตา</span><span class="stat-value" id="moves">0 <small>ตา</small></span></div>
+						<div class="stat"><span class="stat-label">สถิติที่ดีที่สุด</span><span class="stat-value" id="best-time">--:--</span></div>
+					</div>
+					<div class="board-wrap"><div class="board" id="board" role="group" aria-label="กระดานเกม"></div></div>
+					<div class="goal-guide" id="goal-guide" role="region" aria-label="ลำดับตัวเลขเป้าหมาย" hidden>
+						<div class="goal-copy"><strong>เป้าหมาย</strong>เริ่ม 1 มุมซ้ายบน<br>เรียงซ้ายไปขวา แล้วลงแถว</div>
+						<div class="goal-board" id="goal-board" aria-hidden="true"></div>
+					</div>
+					<div class="controls">
+						<button class="action primary" id="new-game" type="button">
+							<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 7v5h-5M4 17v-5h5"/><path d="M5.6 9a7 7 0 0 1 11.6-2L20 12M4 12l2.8 5a7 7 0 0 0 11.6-2"/></svg>เริ่มเกมใหม่
+						</button>
+						<button class="action" id="give-up" type="button">ยอมแพ้</button>
+					</div>
+					  <p class="key-hint">ลากเลขแนวเดียวกับช่องว่าง เลขระหว่างทางเลื่อนตาม</p>
+				</div>
+			</section>
+			<aside class="sidebar" aria-label="สถิติและคำแนะนำ">
+				<section class="side-section"><h2 class="side-heading">สถิติ <span>บันทึกในเครื่อง</span></h2><div class="record-list" id="record-list"></div></section>
+			</aside>
+		</div>
+		<footer class="footer">little slide</footer>
+	</main>
+
+	<dialog id="result-dialog" aria-labelledby="result-title">
+		<div class="modal-content"><div class="modal-emoji" id="result-emoji" aria-hidden="true">🎉</div><h2 id="result-title">เก่งมากเลย!</h2><p id="result-message"></p><div class="modal-stats" id="result-stats"></div><div class="modal-actions"><button class="action" id="close-dialog" type="button">ไว้ก่อน</button><button class="action primary" id="play-again" type="button">เล่นอีกรอบ</button></div></div>
+	</dialog>
+	<script>
+		(() => {
+			const palettes = [
+				{ accent: "#db7784", deep: "#a54a58", tile: "#f8e9df", ink: "#bd4055", alt: "#f8e9df", altInk: "#bd4055", tray: "#4d3039" },
+				{ accent: "#63a979", deep: "#397550", tile: "#edf2dc", ink: "#318b54", alt: "#edf2dc", altInk: "#318b54", tray: "#293c34" },
+				{ accent: "#668fcb", deep: "#466aa0", tile: "#e9edf3", ink: "#3869b1", alt: "#e9edf3", altInk: "#3869b1", tray: "#2f3a4a" },
+				{ accent: "#d19a4c", deep: "#926626", tile: "#f5edda", ink: "#be762a", alt: "#f5edda", altInk: "#be762a", tray: "#493a2a" },
+				{ accent: "#9876b4", deep: "#6f508a", tile: "#f0e8f3", ink: "#84559b", alt: "#f0e8f3", altInk: "#84559b", tray: "#3e3448" }
+			];
+			const palette = palettes[Math.floor(Math.random() * palettes.length)];
+			const root = document.documentElement;
+			root.style.setProperty("--accent", palette.accent);
+			root.style.setProperty("--accent-deep", palette.deep);
+			root.style.setProperty("--tile", palette.tile);
+			root.style.setProperty("--tile-ink", palette.ink);
+			root.style.setProperty("--tile-alt", palette.alt);
+			root.style.setProperty("--tile-alt-ink", palette.altInk);
+			root.style.setProperty("--tray", palette.tray);
+
+			const boardElement = document.getElementById("board");
+			const goalBoardElement = document.getElementById("goal-board");
+			const timerElement = document.getElementById("timer");
+			const movesElement = document.getElementById("moves");
+			const bestTimeElement = document.getElementById("best-time");
+			const dialog = document.getElementById("result-dialog");
+			const goalToggle = document.getElementById("goal-toggle");
+			const goalGuide = document.getElementById("goal-guide");
+			const recordList = document.getElementById("record-list");
+			const labels = { 3: "ง่าย", 4: "พอดี", 5: "ท้าทาย" };
+			let size = 4;
+			let tiles = [];
+			let moves = 0;
+			let seconds = 0;
+			let timerId = null;
+			let started = false;
+			let finished = false;
+			let soundOn = true;
+			let audioContext = null;
+			let pointerDrag = null;
+
+			function formatTime(totalSeconds) {
+				return `${String(Math.floor(totalSeconds / 60)).padStart(2, "0")}:${String(totalSeconds % 60).padStart(2, "0")}`;
+			}
+
+			function getRecords() {
+				try { return JSON.parse(localStorage.getItem("little-slide-records") || "{}"); }
+				catch { return {}; }
+			}
+
+			function saveRecords(records) {
+				try { localStorage.setItem("little-slide-records", JSON.stringify(records)); }
+				catch { /* Storage can be unavailable in private browsing. */ }
+			}
+
+			function renderRecords() {
+				const records = getRecords();
+				const totalWins = Object.values(records).reduce((sum, record) => sum + (record.wins || 0), 0);
+				const best = records[size];
+				bestTimeElement.textContent = best?.bestTime != null ? formatTime(best.bestTime) : "--:--";
+				recordList.innerHTML = `<div class="record"><span class="record-name">เล่นจบแล้ว</span><span class="record-value">${totalWins} เกม</span></div><div class="record"><span class="record-name">สถิติ · ${labels[size]}</span><span class="record-value">${best?.bestTime != null ? formatTime(best.bestTime) : "--:--"}</span></div><div class="record"><span class="record-name">ตาน้อยที่สุด</span><span class="record-value">${best?.bestMoves != null ? `${best.bestMoves} ตา` : "--"}</span></div>`;
+			}
+
+			function playTone(frequency, duration = 0.07, type = "sine") {
+				if (!soundOn) return;
+				try {
+					audioContext ||= new (window.AudioContext || window.webkitAudioContext)();
+					const oscillator = audioContext.createOscillator();
+					const gain = audioContext.createGain();
+					oscillator.type = type;
+					oscillator.frequency.value = frequency;
+					gain.gain.setValueAtTime(0.06, audioContext.currentTime);
+					gain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + duration);
+					oscillator.connect(gain);
+					gain.connect(audioContext.destination);
+					oscillator.start();
+					oscillator.stop(audioContext.currentTime + duration);
+				} catch { /* Audio is an enhancement; the game remains playable without it. */ }
+			}
+
+			function neighbors(index) {
+				const result = [];
+				const row = Math.floor(index / size);
+				const column = index % size;
+				if (row > 0) result.push(index - size);
+				if (row < size - 1) result.push(index + size);
+				if (column > 0) result.push(index - 1);
+				if (column < size - 1) result.push(index + 1);
+				return result;
+			}
+
+			function lineToEmpty(sourceIndex, emptyIndex) {
+				if (sourceIndex === emptyIndex) return [];
+				const sourceRow = Math.floor(sourceIndex / size);
+				const sourceColumn = sourceIndex % size;
+				const emptyRow = Math.floor(emptyIndex / size);
+				const emptyColumn = emptyIndex % size;
+				if (sourceRow !== emptyRow && sourceColumn !== emptyColumn) return [];
+				const step = sourceRow === emptyRow
+					? Math.sign(sourceIndex - emptyIndex)
+					: Math.sign(sourceIndex - emptyIndex) * size;
+				const path = [emptyIndex];
+				for (let index = emptyIndex + step; ; index += step) {
+					path.push(index);
+					if (index === sourceIndex) return path;
+				}
+			}
+
+			function createTile() {
+				const tile = document.createElement("button");
+				tile.type = "button";
+				const number = document.createElement("span");
+				number.className = "tile-number";
+				tile.append(number);
+				tile.addEventListener("pointerdown", event => {
+					if (tile.disabled || event.button !== 0) return;
+					event.preventDefault();
+					const index = Number(tile.dataset.index);
+					const path = lineToEmpty(index, tiles.indexOf(0));
+					const preview = createDragPreview(path);
+					pointerDrag = { tile, index, pointerId: event.pointerId, startX: event.clientX, startY: event.clientY, moved: false, ...preview };
+					if (!pointerDrag.groupGhosts.length) {
+						tile.style.setProperty("--drag-x", "0px");
+						tile.style.setProperty("--drag-y", "0px");
+						tile.classList.add("dragging");
+					}
+				});
+				return tile;
+			}
+
+			function renderBoard() {
+				boardElement.style.setProperty("--size", size);
+				boardElement.classList.remove("is-solved");
+				if (boardElement.children.length !== tiles.length) {
+					boardElement.replaceChildren(...Array.from({ length: tiles.length }, createTile));
+				}
+				const emptyIndex = tiles.indexOf(0);
+				tiles.forEach((value, index) => {
+					const tile = boardElement.children[index];
+					const empty = value === 0;
+					tile.dataset.index = index;
+					tile.style.setProperty("--i", index);
+					tile.className = empty ? "tile empty" : "tile";
+					tile.disabled = empty || finished || lineToEmpty(index, emptyIndex).length < 2;
+					tile.setAttribute("aria-label", empty ? "ช่องว่าง" : `เลื่อนเลข ${value}`);
+					tile.setAttribute("aria-pressed", "false");
+					const number = tile.firstElementChild;
+					const displayedValue = empty ? "" : String(value);
+					if (number.textContent !== displayedValue) number.textContent = displayedValue;
+					if (empty) tile.setAttribute("aria-hidden", "true");
+					else tile.removeAttribute("aria-hidden");
+				});
+			}
+
+			function renderGoal() {
+				const finalPosition = size * size - 1;
+				goalBoardElement.style.setProperty("--size", size);
+				goalBoardElement.innerHTML = "";
+				for (let index = 0; index <= finalPosition; index += 1) {
+					const cell = document.createElement("span");
+					cell.className = index === finalPosition ? "goal-cell empty" : "goal-cell";
+					cell.textContent = index === finalPosition ? "" : String(index + 1);
+					goalBoardElement.append(cell);
+				}
+			}
+
+			function createDragPreview(path) {
+				if (path.length < 3) {
+					return { groupGhosts: [], coveredTiles: [] };
+				}
+				const selectedBounds = boardElement.children[path[path.length - 1]].getBoundingClientRect();
+				const emptyBounds = boardElement.children[path[0]].getBoundingClientRect();
+				const nextBounds = boardElement.children[path[path.length - 2]].getBoundingClientRect();
+				const groupGhosts = [];
+				const coveredTiles = [];
+				for (let position = 1; position < path.length; position += 1) {
+					const source = boardElement.children[path[position]];
+					const sourceBounds = source.getBoundingClientRect();
+					const ghost = source.cloneNode(true);
+					ghost.className = position === path.length - 1
+						? "tile tile-ghost dragging"
+						: "tile tile-ghost tile-group-member";
+					ghost.disabled = true;
+					ghost.setAttribute("aria-hidden", "true");
+					ghost.style.position = "fixed";
+					ghost.style.left = `${sourceBounds.left}px`;
+					ghost.style.top = `${sourceBounds.top}px`;
+					ghost.style.width = `${sourceBounds.width}px`;
+					ghost.style.height = `${sourceBounds.height}px`;
+					document.body.append(ghost);
+					source.classList.add("slide-covered");
+					groupGhosts.push(ghost);
+					coveredTiles.push(source);
+				}
+				return {
+					groupGhosts,
+					coveredTiles,
+					stepX: nextBounds.left - selectedBounds.left,
+					stepY: nextBounds.top - selectedBounds.top,
+					fullX: emptyBounds.left - selectedBounds.left,
+					fullY: emptyBounds.top - selectedBounds.top
+				};
+			}
+
+			function clearDragPreview(drag) {
+				if (drag.groupGhosts.length) {
+					drag.groupGhosts.forEach(ghost => ghost.remove());
+					drag.coveredTiles.forEach(tile => tile.classList.remove("slide-covered"));
+					return;
+				}
+				drag.tile.classList.remove("dragging");
+				drag.tile.style.removeProperty("--drag-x");
+				drag.tile.style.removeProperty("--drag-y");
+			}
+
+			function moveTile(index) {
+				const emptyIndex = tiles.indexOf(0);
+				const path = lineToEmpty(index, emptyIndex);
+				if (finished || path.length < 2) return;
+				for (let position = 0; position < path.length - 1; position += 1) {
+					tiles[path[position]] = tiles[path[position + 1]];
+				}
+				tiles[path[path.length - 1]] = 0;
+				moves += path.length - 1;
+				movesElement.innerHTML = `${moves} <small>ตา</small>`;
+				if (!started) {
+					started = true;
+					timerId = window.setInterval(() => { seconds += 1; timerElement.textContent = formatTime(seconds); }, 1000);
+				}
+				renderBoard();
+				playTone(440 + (moves % 5) * 45);
+				if (tiles.every((value, position) => value === (position + 1) % tiles.length)) finishGame(true);
+			}
+
+			function shuffleBoard() {
+				const solved = Array.from({ length: size * size }, (_, index) => (index + 1) % (size * size));
+				tiles = [...solved];
+				let emptyIndex = tiles.length - 1;
+				let previousIndex = -1;
+				const shuffleMoves = size * size * 32;
+				for (let step = 0; step < shuffleMoves; step += 1) {
+					const options = neighbors(emptyIndex).filter(index => index !== previousIndex);
+					const nextIndex = options[Math.floor(Math.random() * options.length)];
+					[tiles[emptyIndex], tiles[nextIndex]] = [tiles[nextIndex], tiles[emptyIndex]];
+					previousIndex = emptyIndex;
+					emptyIndex = nextIndex;
+				}
+				if (tiles.every((value, position) => value === solved[position])) {
+					const nextIndex = neighbors(emptyIndex)[0];
+					[tiles[emptyIndex], tiles[nextIndex]] = [tiles[nextIndex], tiles[emptyIndex]];
+				}
+			}
+
+			function startGame() {
+				if (pointerDrag) clearDragPreview(pointerDrag);
+				pointerDrag = null;
+				window.clearInterval(timerId);
+				started = false;
+				finished = false;
+				seconds = 0;
+				moves = 0;
+				timerElement.textContent = "00:00";
+				movesElement.innerHTML = '0 <small>ตา</small>';
+				shuffleBoard();
+				renderBoard();
+				renderGoal();
+				renderRecords();
+				if (dialog.open) dialog.close();
+			}
+
+			function finishGame(won) {
+				finished = true;
+				window.clearInterval(timerId);
+				renderBoard();
+				if (won) {
+					boardElement.classList.add("is-solved");
+					const records = getRecords();
+					const record = records[size] || { wins: 0, bestTime: null, bestMoves: null };
+					record.wins += 1;
+					record.bestTime = record.bestTime == null ? seconds : Math.min(record.bestTime, seconds);
+					record.bestMoves = record.bestMoves == null ? moves : Math.min(record.bestMoves, moves);
+					records[size] = record;
+					saveRecords(records);
+					playTone(660, 0.14);
+					window.setTimeout(() => playTone(880, 0.2), 100);
+					document.getElementById("result-emoji").textContent = "🎉";
+					document.getElementById("result-title").textContent = "เก่งมากเลย!";
+					document.getElementById("result-message").textContent = "ตัวเลขกลับเข้าที่ครบทุกตัวแล้ว พักยิ้มได้เลยนะ";
+					document.getElementById("result-stats").innerHTML = `<div><strong>${formatTime(seconds)}</strong><span>เวลาที่ใช้</span></div><div><strong>${moves}</strong><span>จำนวนตา</span></div>`;
+					renderRecords();
+				} else {
+					document.getElementById("result-emoji").textContent = "🌷";
+					document.getElementById("result-title").textContent = "พักก่อนก็ได้นะ";
+					document.getElementById("result-message").textContent = "รอบนี้หยุดไว้แค่นี้ แล้วค่อยกลับมาเล่นใหม่เมื่อพร้อม";
+					document.getElementById("result-stats").innerHTML = `<div><strong>${formatTime(seconds)}</strong><span>เวลาที่เล่น</span></div><div><strong>${moves}</strong><span>จำนวนตา</span></div>`;
+				}
+				dialog.showModal();
+			}
+
+			document.querySelectorAll(".difficulty").forEach(button => button.addEventListener("click", () => {
+				size = Number(button.dataset.size);
+				document.querySelectorAll(".difficulty").forEach(item => item.setAttribute("aria-pressed", String(item === button)));
+				startGame();
+			}));
+			document.getElementById("new-game").addEventListener("click", startGame);
+			document.getElementById("give-up").addEventListener("click", () => finishGame(false));
+			document.getElementById("close-dialog").addEventListener("click", () => dialog.close());
+			document.getElementById("play-again").addEventListener("click", startGame);
+			goalToggle.addEventListener("click", () => {
+				const opening = goalGuide.hidden;
+				goalGuide.hidden = !opening;
+				goalToggle.setAttribute("aria-expanded", String(opening));
+				goalToggle.setAttribute("aria-label", opening ? "ซ่อนเป้าหมาย" : "ดูเป้าหมาย");
+				goalToggle.title = opening ? "ซ่อนเป้าหมาย" : "ดูเป้าหมาย";
+			});
+			document.addEventListener("click", event => {
+				if (!goalGuide.hidden && !goalGuide.contains(event.target) && !goalToggle.contains(event.target)) {
+					goalGuide.hidden = true;
+					goalToggle.setAttribute("aria-expanded", "false");
+					goalToggle.setAttribute("aria-label", "ดูเป้าหมาย");
+					goalToggle.title = "ดูเป้าหมาย";
+				}
+			});
+			document.addEventListener("keydown", event => {
+				if (event.key !== "Escape" || goalGuide.hidden) return;
+				goalGuide.hidden = true;
+				goalToggle.setAttribute("aria-expanded", "false");
+				goalToggle.setAttribute("aria-label", "ดูเป้าหมาย");
+				goalToggle.title = "ดูเป้าหมาย";
+				goalToggle.focus();
+			});
+			document.addEventListener("pointermove", event => {
+				if (!pointerDrag || pointerDrag.pointerId !== event.pointerId) return;
+				const deltaX = event.clientX - pointerDrag.startX;
+				const deltaY = event.clientY - pointerDrag.startY;
+				if (Math.abs(deltaX) + Math.abs(deltaY) > 5) pointerDrag.moved = true;
+				if (pointerDrag.moved) {
+					if (pointerDrag.groupGhosts.length) {
+						const distanceSquared = pointerDrag.fullX ** 2 + pointerDrag.fullY ** 2;
+						const dragProgress = (deltaX * pointerDrag.fullX + deltaY * pointerDrag.fullY) / distanceSquared;
+						const progress = Math.max(0, Math.min(1, dragProgress * 1.5));
+						const groupX = pointerDrag.stepX * progress;
+						const groupY = pointerDrag.stepY * progress;
+						pointerDrag.groupGhosts.forEach(ghost => {
+							ghost.style.setProperty("--drag-x", `${groupX}px`);
+							ghost.style.setProperty("--drag-y", `${groupY}px`);
+						});
+					} else {
+						pointerDrag.tile.classList.add("dragging");
+						pointerDrag.tile.style.setProperty("--drag-x", `${deltaX}px`);
+						pointerDrag.tile.style.setProperty("--drag-y", `${deltaY}px`);
+					}
+				}
+			});
+			document.addEventListener("pointerup", event => {
+				if (!pointerDrag || pointerDrag.pointerId !== event.pointerId) return;
+				const drag = pointerDrag;
+				pointerDrag = null;
+				const emptyTile = boardElement.querySelector(".tile.empty");
+				const emptyBounds = emptyTile.getBoundingClientRect();
+				const droppedOnEmpty = event.clientX >= emptyBounds.left && event.clientX <= emptyBounds.right && event.clientY >= emptyBounds.top && event.clientY <= emptyBounds.bottom;
+				clearDragPreview(drag);
+				if (drag.moved && droppedOnEmpty) moveTile(drag.index);
+			});
+			document.addEventListener("pointercancel", event => {
+				if (!pointerDrag || pointerDrag.pointerId !== event.pointerId) return;
+				clearDragPreview(pointerDrag);
+				pointerDrag = null;
+			});
+			document.getElementById("sound-toggle").addEventListener("click", event => {
+				soundOn = !soundOn;
+				const button = event.currentTarget;
+				button.setAttribute("aria-label", soundOn ? "ปิดเสียง" : "เปิดเสียง");
+				button.title = soundOn ? "ปิดเสียง" : "เปิดเสียง";
+				button.innerHTML = soundOn
+					? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 5 6 9H3v6h3l5 4z"/><path d="M15.5 8.5a5 5 0 0 1 0 7M19 5a10 10 0 0 1 0 14"/></svg>'
+					: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 5 6 9H3v6h3l5 4zM22 9l-6 6M16 9l6 6"/></svg>';
+			});
+			document.addEventListener("keydown", event => {
+				const directions = { ArrowUp: -size, ArrowDown: size, ArrowLeft: -1, ArrowRight: 1 };
+				if (!(event.key in directions) || finished || dialog.open) return;
+				event.preventDefault();
+				const empty = tiles.indexOf(0);
+				const target = empty + directions[event.key];
+				if (target >= 0 && target < tiles.length && neighbors(empty).includes(target)) moveTile(target);
+			});
+
+			renderRecords();
+			startGame();
+		})();
+	</script>
+</body>
+</html>
